@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # MASTER (ANA YAZICI) VERİTABANI (Port: 5433)
+  # ==========================================
+  pg-master:
+    image: bitnami/postgresql:latest
+    container_name: pg-master
+    ports:
+      - "5433:5432" # Bilgisayarındaki 5433 portunu kullanacak
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=1234
+      - POSTGRESQL_DATABASE=siparis_sistemi_db
+    volumes:
+      - master_data:/bitnami/postgresql
+
+  # ==========================================
+  # REPLICA (YEDEK OKUYUCU) VERİTABANI (Port: 5434)
+  # ==========================================
+  pg-replica:
+    image: bitnami/postgresql:latest
+    container_name: pg-replica
+    ports:
+      - "5434:5432" # Bilgisayarındaki 5434 portunu kullanacak
+    depends_on:
+      - pg-master
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_MASTER_HOST=pg-master
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=1234
+
+volumes:
+  master_data:

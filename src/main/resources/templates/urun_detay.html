@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ürün Detayı - NovaMarket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .star-rating input { display: none; }
+        .star-rating label { font-size: 2rem; color: #ddd; cursor: pointer; transition: 0.2s; }
+        .star-rating input:checked ~ label { color: #ffc107; }
+        .star-rating label:hover, .star-rating label:hover ~ label { color: #ffc107; }
+        .star-rating { direction: rtl; display: inline-block; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+    
+    <a th:href="@{/urunler}" class="btn btn-outline-secondary mb-4"><i class="bi bi-arrow-left"></i> Ürünlere Dön</a>
+
+    <!-- ÜST KISIM: Ürün Bilgileri (Resim Yok, İkon Var) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="row g-0">
+            <!-- Sol Taraf (Yer Tutucu İkon Alanı) -->
+            <div class="col-md-4 d-flex align-items-center justify-content-center bg-dark text-white rounded-start" style="min-height: 300px;">
+                <!-- Fotoğraf yerine devasa, şık bir ikon -->
+                <i th:class="${urun.kategori == 'Teknoloji' ? 'bi bi-laptop' : (urun.kategori == 'Giyim' ? 'bi bi-bag' : 'bi bi-box-seam')}" style="font-size: 8rem;"></i>
+            </div>
+            
+            <!-- Sağ Taraf (Ürün Bilgileri ve Satın Alma) -->
+            <div class="col-md-8">
+                <div class="card-body p-5">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-primary" th:text="${urun.kategori}">Kategori</span>
+                        <!-- Ortalamayı Göster -->
+                        <div class="text-warning fw-bold fs-5">
+                            <i class="bi bi-star-fill"></i> <span th:text="${ortalamaPuan}">0.0</span> / 5.0
+                        </div>
+                    </div>
+                    
+                    <h2 class="card-title fw-bold text-dark mb-3" th:text="${urun.urunAdi}">Ürün Adı</h2>
+                    <h1 class="text-success fw-bold mb-4" th:text="${urun.fiyat} + ' ₺'">0.0 ₺</h1>
+                    
+                    <p class="text-muted"><i class="bi bi-box"></i> Mevcut Stok: <span class="fw-bold text-dark" th:text="${urun.stokAdedi}">0</span></p>
+
+                    <form th:if="${urun.stokAdedi > 0}" th:action="@{/sepete-ekle}" method="post" class="mt-4">
+                        <input type="hidden" name="urunId" th:value="${urun.id}">
+                        <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold shadow-sm">
+                            <i class="bi bi-cart-plus"></i> Sepete Ekle
+                        </button>
+                    </form>
+                    <button th:if="${urun.stokAdedi <= 0}" class="btn btn-secondary btn-lg w-100 mt-4" disabled>Tükendi</button>
+
+                    <!-- YÖNETİCİ KONTROLLERİ (DÜZENLE VE SİL) -->
+                    <div sec:authorize="hasAnyRole('ADMIN', 'SATICI')" class="mt-4 pt-4 border-top d-flex gap-2">
+                        
+                        <!-- Düzenle Butonu -->
+                        <a th:href="@{/urun/duzenle/{id}(id=${urun.id})}" class="btn btn-warning flex-grow-1 fw-bold">
+                            <i class="bi bi-pencil"></i> <span th:text="#{product.edit.button}">✏️ Ürünü Düzenle</span>
+                        </a>
+
+                        <!-- Sil Butonu -->
+                        <form th:action="@{/urun/sil/{id}(id=${urun.id})}" method="post" class="flex-grow-1" th:onsubmit="|return confirm('#{card.confirm_delete}');|">
+                            <button type="submit" class="btn btn-danger w-100 fw-bold">
+                                <i class="bi bi-trash"></i> <span th:text="#{card.delete}">Sil</span>
+                            </button>
+                        </form>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALT KISIM: Yorumlar ve Değerlendirme Formu -->
+    <div class="row">
+        <!-- Sol Sütun: Yorum Yapma Formu -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Bu Ürünü Değerlendir</h5>
+                    <form th:action="@{/degerlendirme/ekle}" method="post">
+                        <input type="hidden" name="urunId" th:value="${urun.id}">
+                        
+                        <!-- Yıldız Seçimi (Sıralama CSS hilesi ile sağdan sola yapıldı) -->
+                        <div class="text-center mb-2">
+                            <div class="star-rating">
+                                <input type="radio" id="star5" name="yildiz" value="5" required /><label for="star5" title="5 Yıldız"><i class="bi bi-star-fill"></i></label>
+                                <input type="radio" id="star4" name="yildiz" value="4" /><label for="star4" title="4 Yıldız"><i class="bi bi-star-fill"></i></label>
+                                <input type="radio" id="star3" name="yildiz" value="3" /><label for="star3" title="3 Yıldız"><i class="bi bi-star-fill"></i></label>
+                                <input type="radio" id="star2" name="yildiz" value="2" /><label for="star2" title="2 Yıldız"><i class="bi bi-star-fill"></i></label>
+                                <input type="radio" id="star1" name="yildiz" value="1" /><label for="star1" title="1 Yıldız"><i class="bi bi-star-fill"></i></label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <textarea class="form-control" name="yorumMetni" rows="3" placeholder="Ürün hakkında ne düşünüyorsunuz?" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Yorumu Gönder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Sütun: Yapılan Yorumların Listesi -->
+        <div class="col-md-8">
+            <h5 class="fw-bold mb-3">Ürün Yorumları (<span th:text="${yorumlar.size()}">0</span>)</h5>
+            
+            <div th:if="${yorumlar.isEmpty()}" class="alert alert-light border text-center text-muted">
+                <i class="bi bi-chat-square-dots fs-3 d-block mb-2"></i>
+                Bu ürüne henüz yorum yapılmamış. İlk değerlendiren siz olun!
+            </div>
+
+            <!-- Yorum Döngüsü -->
+            <div th:each="yorum : ${yorumlar}" class="card shadow-sm border-0 mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-primary"><i class="bi bi-person-circle"></i> <span th:text="${yorum.kullanici.kullaniciAdi}">Kullanıcı</span></span>
+                        <small class="text-muted" th:text="${#temporals.format(yorum.tarih, 'dd-MM-yyyy HH:mm')}">Tarih</small>
+                    </div>
+                    
+                    <!-- Yıldıza Göre Sarı İkon Basma (Basit Döngü) -->
+                    <div class="text-warning mb-2">
+                        <i class="bi bi-star-fill" th:each="i : ${#numbers.sequence(1, yorum.yildiz)}"></i>
+                        <i class="bi bi-star text-muted" th:if="${yorum.yildiz < 5}" th:each="i : ${#numbers.sequence(yorum.yildiz + 1, 5)}"></i>
+                    </div>
+                    
+                    <p class="card-text text-dark" th:text="${yorum.yorumMetni}">Yorum metni burada yer alacak.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

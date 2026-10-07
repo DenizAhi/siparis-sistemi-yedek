@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sipariş Sistemi - Giriş</title>
+    <!-- Tasarım için basit bir stil ekliyoruz -->
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-kutu { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        .form-grup { margin-bottom: 15px; text-align: left; }
+        .form-grup label { display: block; margin-bottom: 5px; }
+        .form-grup input { width: 100%; padding: 8px; box-sizing: border-box; }
+        .hata { color: red; margin-bottom: 15px; }
+        .buton { background-color: #28a745; color: white; border: none; padding: 10px 20px; width: 100%; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="login-kutu">
+        <h2>Kullanıcı Girişi</h2>
+        
+        <!-- Eğer Spring Security girişte bir hata bulursa (yanlış şifre) URL'ye ?error ekler. Biz de onu yakalayıp mesaj basıyoruz. -->
+        <!-- Hata Mesajı Alanı -->
+        <div th:if="${param.error}" class="alert alert-danger text-center mb-3">
+            
+            <span th:if="${session.SPRING_SECURITY_LAST_EXCEPTION != null}">
+                
+                <!-- 1. KONTROL: Eğer dönen hatanın içinde "15 dakika" kelimesi varsa, bu bizim kilitlenme hatamızdır, ekrana yazdır -->
+                <span th:if="${#strings.contains(session.SPRING_SECURITY_LAST_EXCEPTION.message, '15 dakika')}"
+                      th:text="${session.SPRING_SECURITY_LAST_EXCEPTION.message}">
+                </span>
+                
+                <!-- 2. KONTROL: Eğer içinde "15 dakika" YOKSA, bu standart bir şifre yanlışıdır, jenerik mesajı göster -->
+                <span th:unless="${#strings.contains(session.SPRING_SECURITY_LAST_EXCEPTION.message, '15 dakika')}">
+                    Kullanıcı adı veya şifre hatalı.
+                </span>
+                
+            </span>
+            
+        </div>
+        
+        <div th:if="${param.logout}" style="color: green; margin-bottom: 15px;">
+            Başarıyla çıkış yaptınız.
+        </div>
+
+        <!-- BAŞKA CİHAZDAN GİRİŞ YAPILDI (EXPIRED) MESAJI -->
+        <div th:if="${param.expired}" style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            <b>Güvenlik Uyarısı:</b><br>
+            Oturumunuz sonlandırıldı. Hesabınıza başka bir cihazdan veya tarayıcıdan giriş yapıldı.
+        </div>
+
+        <!-- POST isteğini yine /login adresine atıyoruz. Spring Security arka planda kendisi yakalayacak. -->
+        <form th:action="@{/login}" method="post">
+            <div class="form-grup">
+                <label for="username">Kullanıcı Adı:</label>
+                <!-- name="username" olması Spring Security'nin bunu bulabilmesi için ZORUNLUDUR -->
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-grup">
+                <label for="password">Şifre:</label>
+                <!-- name="password" olması ZORUNLUDUR -->
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="buton">Giriş Yap</button>
+        </form>
+        <!-- YENİ EKLENEN KISIM: Kayıt Ol Butonu -->
+        <div class="mt-3 text-center">
+            <p>Hesabın yok mu?</p>
+            <a th:href="@{/kayit}" class="btn btn-outline-success w-100">Yeni Kayıt Oluştur</a>
+        </div>
+          
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Şifre Değiştir</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<!-- Navbar'ı buraya da ekleyebilirsin, kullanıcı geri dönebilsin -->
+<div class="container mt-4 mb-4">
+    <a th:href="@{/urunler}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Ürünlere Dön</a>
+</div>
+
+<div class="container d-flex justify-content-center">
+    <div class="card shadow-sm p-4" style="width: 400px;">
+        <h3 class="text-center mb-4"><i class="bi bi-shield-lock"></i> Şifre Değiştir</h3>
+
+        <!-- BAŞARI MESAJI -->
+        <div th:if="${basari}" class="alert alert-success text-center">
+            <i class="bi bi-check-circle-fill"></i> <span th:text="${basari}"></span>
+        </div>
+
+        <!-- HATA MESAJI -->
+        <div th:if="${hata}" class="alert alert-danger text-center">
+            <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${hata}"></span>
+        </div>
+
+        <!-- ŞİFRE DEĞİŞTİRME FORMU -->
+        <form th:action="@{/profil/sifre-degistir}" method="post">
+            
+            <div class="mb-3">
+                <label for="eskiSifre" class="form-label fw-bold">Mevcut Şifreniz</label>
+                <input type="password" class="form-control" id="eskiSifre" name="eskiSifre" required>
+            </div>
+            
+            <div class="mb-4">
+                <label for="yeniSifre" class="form-label fw-bold">Yeni Şifreniz</label>
+                <input type="password" class="form-control" id="yeniSifre" name="yeniSifre" required>
+                <div class="form-text text-muted" style="font-size: 0.85rem;">
+                    * En az 8 karakter<br>
+                    * Büyük ve küçük harf<br>
+                    * Rakam ve özel karakter (@, #, !, vb.)<br>
+                    * Son 3 şifrenizden farklı olmalı
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 fw-bold">Şifreyi Güncelle</button>
+        </form>
+    </div>
+</div>
+
+<!-- Bootstrap JS (Açılır menülerin vb. çalışması için) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Favorilerim - NovaMarket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    
+    <!-- Başlık ve Geri Dönüş Butonu -->
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+        <h2 class="text-danger fw-bold"><i class="bi bi-heart-fill"></i> Favori Ürünlerim</h2>
+        <a th:href="@{/urunler}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Alışverişe Dön</a>
+    </div>
+
+    <!-- Eğer Favori Ürün Yoksa Çıkacak Mesaj -->
+    <div th:if="${urunler == null or urunler.isEmpty()}" class="alert alert-warning text-center shadow-sm p-4">
+        <h4><i class="bi bi-emoji-frown"></i> Henüz favoriye eklediğiniz bir ürün bulunmuyor.</h4>
+        <p>Hemen ürünler sayfasına giderek beğendiğiniz ürünleri kalp ikonuna tıklayarak favorilerinize ekleyebilirsiniz.</p>
+        <a th:href="@{/urunler}" class="btn btn-primary mt-2">Ürünleri Keşfet</a>
+    </div>
+
+    <!-- Favori Ürünleri Listeleme Izgarası -->
+    <div class="row">
+        <div class="col-md-3" th:each="urun : ${urunler}">
+            <div class="card mb-4 shadow-sm position-relative border-danger">
+                
+                <!-- Kalp Butonu (Burada tıklayınca favorilerden çıkarır) -->
+                <form th:action="@{/favori/degistir}" method="post" class="position-absolute top-0 end-0 p-2 m-1">
+                    <input type="hidden" name="urunId" th:value="${urun.id}">
+                    <button type="submit" class="btn btn-link p-0 border-0 bg-transparent" title="Favorilerden Çıkar">
+                        <i class="bi bi-heart-fill text-danger fs-4"></i>
+                    </button>
+                </form>
+
+                <div class="card-body text-center mt-3">
+                    <h5 class="card-title text-primary fw-bold" th:text="${urun.urunAdi}">Ürün Adı</h5>
+                    <h4 class="card-text text-success mb-3" th:text="${urun.fiyat} + ' ₺'">Fiyat</h4>
+                    
+                    <!-- Sepete Ekle Butonu -->
+                    <form th:if="${urun.stokAdedi > 0}" th:action="@{/sepete-ekle}" method="post">
+                        <input type="hidden" name="urunId" th:value="${urun.id}">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">
+                            <i class="bi bi-cart-plus"></i> Sepete Ekle
+                        </button>
+                    </form>
+                    <button th:if="${urun.stokAdedi <= 0}" class="btn btn-secondary w-100" disabled>Tükendi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Dropdown vb. özellikleri için gerekli JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

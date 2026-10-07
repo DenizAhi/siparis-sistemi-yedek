@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sipariş Detayı</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-box-seam text-primary"></i> 
+            Sipariş Detayı <span class="text-muted">#<span th:text="${siparis.id}">1</span></span>
+        </h2>
+        
+        <!-- Kullanıcı geldiği yere kolayca dönsün diye tarayıcının geri fonksiyonunu kullanıyoruz -->
+        <button onclick="history.back()" class="btn btn-outline-secondary shadow-sm">
+            <i class="bi bi-arrow-left"></i> Geri Dön
+        </button>
+    </div>
+
+    <!-- Sipariş Genel Bilgileri -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0 bg-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1 text-muted">Müşteri</p>
+                        <h5 class="mb-0 text-dark fw-bold" th:text="${siparis.kullanici.kullaniciAdi}">Kullanıcı</h5>
+                    </div>
+                    <div>
+                        <p class="mb-1 text-muted">Tarih</p>
+                        <h5 class="mb-0 text-dark" th:text="${#temporals.format(siparis.siparisTarihi, 'dd-MM-yyyy HH:mm')}">Tarih</h5>
+                    </div>
+                    <div>
+                        <p class="mb-1 text-muted">Durum</p>
+                        <h5 class="mb-0 text-primary fw-bold" th:text="${siparis.durum}">DURUM</h5>
+                    </div>
+                    <div class="text-end">
+                        <p class="mb-1 text-muted">Toplam Tutar</p>
+                        <h4 class="mb-0 text-success fw-bold" th:text="${siparis.toplamTutar} + ' ₺'">0 ₺</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sipariş İçindeki Ürünler -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Satın Alınan Ürünler</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Ürün Adı</th>
+                        <th>Birim Fiyatı</th>
+                        <th>Adet</th>
+                        <th class="pe-4 text-end">Ara Toplam</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detay : ${detaylar}">
+                        <td class="ps-4 fw-bold text-primary" th:text="${detay.urun.urunAdi}">Ürün Adı</td>
+                        <td th:text="${detay.birimFiyat} + ' ₺'">0 ₺</td>
+                        <td><span class="badge bg-secondary fs-6" th:text="${detay.miktar}">1</span></td>
+                        <td class="pe-4 text-end text-success fw-bold" th:text="${detay.birimFiyat * detay.miktar} + ' ₺'">0 ₺</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

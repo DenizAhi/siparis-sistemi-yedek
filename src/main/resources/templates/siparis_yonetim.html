@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sipariş Yönetim Paneli</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-gear-fill text-dark"></i> Sipariş Yönetim Paneli</h2>
+        <a th:href="@{/urunler}" class="btn btn-outline-secondary shadow-sm">
+            <i class="bi bi-arrow-left"></i> Alışverişe Dön
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-list-check"></i> Sistemdeki Tüm Siparişler</h5>
+        </div>
+        <div class="card-body">
+            
+            <div th:if="${#lists.isEmpty(siparisler)}" class="alert alert-info text-center m-0">
+                Sistemde henüz hiç sipariş bulunmamaktadır.
+            </div>
+
+            <table th:unless="${#lists.isEmpty(siparisler)}" class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>No</th>
+                        <th>Müşteri</th>
+                        <th>Tarih</th>
+                        <th>Tutar</th>
+                        <th>Mevcut Durum</th>
+                        <th>Durum Güncelle</th>
+                        <th>Detay</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="siparis : ${siparisler}">
+                        <td class="fw-bold">#<span th:text="${siparis.id}">1</span></td>
+                        <!-- Hangi müşterinin aldığını gösteriyoruz -->
+                        <td class="text-primary fw-bold" th:text="${siparis.kullanici.kullaniciAdi}">Müşteri</td>
+                        <td th:text="${#temporals.format(siparis.siparisTarihi, 'dd-MM-yyyy HH:mm')}">Tarih</td>
+                        <td class="text-success fw-bold" th:text="${siparis.toplamTutar} + ' ₺'">0 ₺</td>
+                        
+                        <!-- Mevcut Durumu Gösteren Renkli Etiket -->
+                        <td>
+                            <span class="badge bg-warning text-dark" th:if="${siparis.durum == 'ÖDEME BEKLİYOR (HAVALE)'}">ÖDEME BEKLİYOR</span>
+                            <span class="badge bg-info text-dark" th:if="${siparis.durum == 'HAZIRLANIYOR'}">HAZIRLANIYOR</span>
+                            <span class="badge bg-primary" th:if="${siparis.durum == 'KARGOYA VERİLDİ'}">KARGOYA VERİLDİ</span>
+                            <span class="badge bg-success" th:if="${siparis.durum == 'TAMAMLANDI'}">TAMAMLANDI</span>
+                        </td>
+                        
+                        <!-- Durum Değiştirme Formu (Açılır Liste - Select) -->
+                        <td>
+                            <form th:action="@{/yonetim/siparis/guncelle}" method="post" class="d-flex gap-2 m-0">
+                                <input type="hidden" name="siparisId" th:value="${siparis.id}">
+                                
+                                <select name="yeniDurum" class="form-select form-select-sm" style="width: 160px;">
+                                    <option value="ÖDEME BEKLİYOR (HAVALE)" th:selected="${siparis.durum == 'ÖDEME BEKLİYOR (HAVALE)'}">Ödeme Bekliyor</option>
+                                    <option value="HAZIRLANIYOR" th:selected="${siparis.durum == 'HAZIRLANIYOR'}">Hazırlanıyor</option>
+                                    <option value="KARGOYA VERİLDİ" th:selected="${siparis.durum == 'KARGOYA VERİLDİ'}">Kargoya Verildi</option>
+                                    <option value="TAMAMLANDI" th:selected="${siparis.durum == 'TAMAMLANDI'}">Tamamlandı</option>
+                                </select>
+                                
+                                <button type="submit" class="btn btn-sm btn-dark">Kaydet</button>
+                            </form>
+                        </td>
+                        <!-- YENİ EKLENEN: Detay Butonu -->
+                        <td>
+                            <a th:href="@{/siparis/detay/{id}(id=${siparis.id})}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-search"></i>
+                            </a>
+                        </td>
+                        
+                    </tr>
+                </tbody>
+            </table>
+            
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

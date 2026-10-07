@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Sipariş Sistemi - Ürünler</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <!-- ÜST KISIM (HEADER & NAVBAR) -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h2 class="text-primary fw-bold"><i class="bi bi-shop"></i> NovaMarket</h2>
+        
+        <!-- SAĞ ÜST MENÜ GRUBU -->
+        <div class="d-flex gap-2 align-items-center">
+            
+            <!-- 1. DİL SEÇİM MENÜSÜ -->
+            <div class="dropdown me-2">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-globe"></i>
+                </button>
+                <ul class="dropdown-menu shadow">
+                    <li><a class="dropdown-item" th:href="@{''(lang=tr)}">🇹🇷 Türkçe</a></li>
+                    <li><a class="dropdown-item" th:href="@{''(lang=en)}">🇬🇧 English</a></li>
+                    <li><a class="dropdown-item" th:href="@{''(lang=de)}">🇩🇪 Deutsch</a></li>
+                </ul>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 2. YÖNETİM PANELİ (SADECE ADMIN VE SATICILAR GÖREBİLİR) -->
+            <!-- ========================================================= -->
+            <div class="dropdown d-inline-block" sec:authorize="hasAnyRole('ADMIN', 'SATICI')">
+                <button class="btn btn-dark dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-shield-lock"></i> <span th:text="#{nav.admin_panel}">Yönetim Paneli</span>
+                </button>
+                <ul class="dropdown-menu shadow">
+                    <li><a class="dropdown-item" th:href="@{/urun/ekle}"><i class="bi bi-plus-circle text-success"></i> <span th:text="#{nav.add.product}">Yeni Ürün Ekle</span></a></li>
+                    <li><a class="dropdown-item" th:href="@{/yonetim/siparisler}"><i class="bi bi-clipboard-data text-primary"></i> <span th:text="#{nav.orders}">Sipariş Yönetimi</span></a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" th:href="@{/yonetim/arsiv}"><i class="bi bi-archive text-secondary"></i> <span th:text="#{nav.archive}">Arşiv</span></a></li>
+                    <li><a class="dropdown-item" th:href="@{/yonetim/dashboard}" th:text="#{nav.dashboard}">📊 Satış İstatistikleri</a></li>
+                </ul>
+            </div>
+
+            <!-- 3. SEPETİM BUTONU -->
+            <a th:href="@{/sepet}" class="btn btn-warning shadow-sm fw-bold">
+                <i class="bi bi-cart-fill"></i> <span th:text="#{nav.cart}">Sepetim</span>
+            </a>
+            
+            <!-- 4. PROFİLİM MENÜSÜ -->
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-info text-white dropdown-toggle shadow-sm" type="button" id="profilMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle"></i> <span th:text="#{nav.profile}">Profilim</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profilMenu">
+                    <li><a class="dropdown-item" th:href="@{/profil}"><i class="bi bi-box-seam"></i> <span th:text="#{nav.past_orders}">Geçmiş Siparişler</span></a></li>
+                    <li><a class="dropdown-item" th:href="@{/favorilerim}"><i class="bi bi-heart-fill text-danger"></i> <span th:text="#{nav.favorites}">Favorilerim</span></a></li>
+                    <li><a class="dropdown-item" th:href="@{/profil/sifre-degistir-sayfasi}"><i class="bi bi-key"></i> <span th:text="#{nav.change_password}">Şifre Değiştir</span></a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post" class="m-0 p-0">
+                            <button type="submit" class="dropdown-item text-danger fw-bold">
+                                <i class="bi bi-box-arrow-right"></i> <span th:text="#{nav.logout}">Çıkış Yap</span>
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ANA İSKELET -->
+    <div class="row">
+        <!-- SOL MENÜ: KATEGORİLER -->
+        <div class="col-md-3 mb-4">
+            <h4 class="mb-3" th:text="#{category.title}">Kategoriler</h4>
+            <div class="list-group shadow-sm">
+                <a th:href="@{/urunler}" class="list-group-item list-group-item-action" th:classappend="${seciliKategori == null ? 'active' : ''}" th:text="#{category.all}">Tüm Ürünler</a>
+                <a th:href="@{/urunler(kategori='Teknoloji')}" class="list-group-item list-group-item-action" th:classappend="${seciliKategori == 'Teknoloji' ? 'active' : ''}" th:text="#{category.tech}">Teknoloji</a>
+                <a th:href="@{/urunler(kategori='Ev Eşyaları')}" class="list-group-item list-group-item-action" th:classappend="${seciliKategori == 'Ev Eşyaları' ? 'active' : ''}" th:text="#{category.home}">Ev Eşyaları</a>
+                <a th:href="@{/urunler(kategori='Giyim')}" class="list-group-item list-group-item-action" th:classappend="${seciliKategori == 'Giyim' ? 'active' : ''}" th:text="#{category.clothing}">Giyim</a>
+                <a th:href="@{/urunler(kategori='Diğer')}" class="list-group-item list-group-item-action" th:classappend="${seciliKategori == 'Diğer' ? 'active' : ''}" th:text="#{category.other}">Diğer</a>
+            </div>
+        </div>
+
+        <!-- SAĞ KISIM: ÜRÜN KARTLARI -->
+        <div class="col-md-9">
+            
+            <!-- ÖZEL VİTRİN KUTUSU -->
+            <div th:if="${(seciliKategori == null and oneriler != null and !oneriler.isEmpty()) or (seciliKategori != null and enPopulerUrunler != null and !enPopulerUrunler.isEmpty())}" 
+                 class="mb-5 p-3 rounded shadow-sm" 
+                 th:style="${seciliKategori == null ? 'background-color: #fdfbf7; border: 1px dashed #ffc107;' : 'background-color: #fff5f5; border: 1px dashed #dc3545;'}">
+                
+                <!-- BAŞLIK VE DİNAMİK KATEGORİ ÇEVİRİSİ -->
+                <h4 th:class="${seciliKategori == null ? 'text-warning fw-bold mb-3' : 'text-danger fw-bold mb-3'}">
+                    <i class="bi bi-stars"></i> 
+                    <span th:if="${seciliKategori == null}" th:text="#{heading.recommended}">Öne Çıkanlar</span>
+                    <span th:if="${seciliKategori == 'Teknoloji'}" th:text="#{category.tech} + ' - ' + #{heading.popular}"></span>
+                    <span th:if="${seciliKategori == 'Ev Eşyaları'}" th:text="#{category.home} + ' - ' + #{heading.popular}"></span>
+                    <span th:if="${seciliKategori == 'Giyim'}" th:text="#{category.clothing} + ' - ' + #{heading.popular}"></span>
+                    <span th:if="${seciliKategori == 'Diğer'}" th:text="#{category.other} + ' - ' + #{heading.popular}"></span>
+                </h4>
+                
+                <div class="row">
+                    <!-- 1. DURUM: Ana Sayfa Akıllı Önerileri -->
+                    <th:block th:if="${seciliKategori == null}">
+                        <div class="col-md-4" th:each="oneri : ${oneriler}">
+                            <div class="card shadow-sm border-warning position-relative">
+                                <form th:action="@{/favori/degistir}" method="post" class="position-absolute top-0 end-0 p-2 m-1">
+                                    <input type="hidden" name="urunId" th:value="${oneri.id}">
+                                    <button type="submit" class="btn btn-link p-0 border-0 bg-transparent">
+                                        <i th:if="${favoriUrunIds != null and favoriUrunIds.contains(oneri.id)}" class="bi bi-heart-fill text-danger fs-4"></i>
+                                        <i th:unless="${favoriUrunIds != null and favoriUrunIds.contains(oneri.id)}" class="bi bi-heart text-secondary fs-4"></i>
+                                    </button>
+                                </form>
+                                <div class="card-body text-center mt-3">
+                                    <a th:href="@{/urun/detay/{id}(id=${oneri.id})}" class="text-decoration-none">
+                                        <h6 class="card-title text-dark fw-bold" th:text="${oneri.urunAdi}">Ürün</h6>
+                                    </a>
+                                    <h5 class="text-success mb-2" th:text="${oneri.fiyat} + ' ₺'">Fiyat</h5>
+                                    
+                                    <form th:if="${oneri.stokAdedi > 0}" th:action="@{/sepete-ekle}" method="post" class="mb-2 mt-2">
+                                        <input type="hidden" name="urunId" th:value="${oneri.id}">
+                                        <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold"><i class="bi bi-cart-plus"></i> <span th:text="#{card.add_to_cart}">Sepete Ekle</span></button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+
+                    <!-- 2. DURUM: Kategori Seçilmişse En Popülerler -->
+                    <th:block th:if="${seciliKategori != null}">
+                        <div class="col-md-4" th:each="urun, iterStat : ${enPopulerUrunler}" th:if="${iterStat.index < 3}">
+                            <div class="card shadow-sm border-danger position-relative">
+                                <form th:action="@{/favori/degistir}" method="post" class="position-absolute top-0 end-0 p-2 m-1">
+                                    <input type="hidden" name="urunId" th:value="${urun.id}">
+                                    <button type="submit" class="btn btn-link p-0 border-0 bg-transparent">
+                                        <i th:if="${favoriUrunIds != null and favoriUrunIds.contains(urun.id)}" class="bi bi-heart-fill text-danger fs-4"></i>
+                                        <i th:unless="${favoriUrunIds != null and favoriUrunIds.contains(urun.id)}" class="bi bi-heart text-secondary fs-4"></i>
+                                    </button>
+                                </form>
+                                <div class="card-body text-center mt-3">
+                                    <a th:href="@{/urun/detay/{id}(id=${urun.id})}" class="text-decoration-none">
+                                        <h6 class="card-title text-dark fw-bold" th:text="${urun.urunAdi}">Ürün</h6>
+                                    </a>
+                                    <h5 class="text-success mb-2" th:text="${urun.fiyat} + ' ₺'">Fiyat</h5>
+                                    
+                                    <form th:if="${urun.stokAdedi > 0}" th:action="@{/sepete-ekle}" method="post" class="mb-2 mt-2">
+                                        <input type="hidden" name="urunId" th:value="${urun.id}">
+                                        <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold"><i class="bi bi-cart-plus"></i> <span th:text="#{card.add_to_cart}">Sepete Ekle</span></button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- TÜM ÜRÜNLER LİSTESİ BAŞLIĞI VE ÇEVİRİSİ -->
+            <h4 class="mb-3">
+                <span th:if="${seciliKategori == null}" th:text="#{heading.all_products}">Tüm Ürünler</span>
+                <span th:if="${seciliKategori == 'Teknoloji'}" th:text="#{category.tech} + ' - ' + #{heading.all_products}"></span>
+                <span th:if="${seciliKategori == 'Ev Eşyaları'}" th:text="#{category.home} + ' - ' + #{heading.all_products}"></span>
+                <span th:if="${seciliKategori == 'Giyim'}" th:text="#{category.clothing} + ' - ' + #{heading.all_products}"></span>
+                <span th:if="${seciliKategori == 'Diğer'}" th:text="#{category.other} + ' - ' + #{heading.all_products}"></span>
+            </h4>
+
+            <!-- ========================================================= -->
+            <!-- ARAMA VE SIRALAMA ÇUBUĞU (YENİ EKLENEN KISIM)             -->
+            <!-- ========================================================= -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <form th:action="@{/urunler}" method="get" class="d-flex gap-2 bg-white p-3 rounded shadow-sm border">
+                        
+                        <!-- Eğer bir kategori seçiliyse, arama yaparken kategoriyi kaybetmemek için gizli input -->
+                        <input type="hidden" name="kategori" th:value="${seciliKategori}" th:if="${seciliKategori != null}">
+                        
+                        <!-- Arama Kutusu -->
+                        <input type="text" name="arama" class="form-control" th:placeholder="#{search.placeholder}" th:value="${arananKelime}">
+                        
+                        <!-- Sıralama Seçeneği -->
+                        <select name="siralama" class="form-select" style="max-width: 250px;">
+                            <option value="" th:text="#{sort.default}">Sıralama Seçin</option>
+                            <option value="artan" th:selected="${seciliSiralama == 'artan'}" th:text="#{sort.price_asc}">Fiyat (En Düşük)</option>
+                            <option value="azalan" th:selected="${seciliSiralama == 'azalan'}" th:text="#{sort.price_desc}">Fiyat (En Yüksek)</option>
+                        </select>
+                        
+                        <!-- Ara Butonu -->
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-search"></i> <span th:text="#{search.button}">Ara</span>
+                        </button>
+                        
+                        <!-- Aramayı Temizle Butonu (Sadece arama yapıldıysa görünür) -->
+                        <a th:if="${arananKelime != null or seciliSiralama != null}" 
+                           th:href="@{/urunler(kategori=${seciliKategori})}" 
+                           class="btn btn-outline-danger">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TÜM ÜRÜNLER LİSTESİ -->
+            <div class="row">
+                <div class="col-md-4" th:each="urun : ${urunler}">
+                    <div class="card mb-4 shadow-sm position-relative">
+                        
+                        <!-- Kalp Butonu -->
+                        <form th:action="@{/favori/degistir}" method="post" class="position-absolute top-0 end-0 p-2 m-1">
+                            <input type="hidden" name="urunId" th:value="${urun.id}">
+                            <button type="submit" class="btn btn-link p-0 border-0 bg-transparent">
+                                <i th:if="${favoriUrunIds != null and favoriUrunIds.contains(urun.id)}" class="bi bi-heart-fill text-danger fs-4"></i>
+                                <i th:unless="${favoriUrunIds != null and favoriUrunIds.contains(urun.id)}" class="bi bi-heart text-secondary fs-4"></i>
+                            </button>
+                        </form>
+                        
+                        <div class="card-body text-center mt-3">
+                            <a th:href="@{/urun/detay/{id}(id=${urun.id})}" class="text-decoration-none">
+                                <h5 class="card-title text-primary fw-bold" th:text="${urun.urunAdi}">Ürün</h5>
+                            </a>
+                            <h4 class="card-text text-success mb-3" th:text="${urun.fiyat} + ' ₺'">Fiyat</h4>
+                            
+                            <!-- STOK YAZISI ÇEVİRİSİ -->
+                            <p class="text-muted mb-2" style="font-size: 0.9rem;" th:text="#{card.stock} + ' ' + ${urun.stokAdedi}">Stok</p>
+                            
+                            <div th:if="${urun.stokAdedi > 0}">
+                                <form th:action="@{/sepete-ekle}" method="post" class="mb-2">
+                                    <input type="hidden" name="urunId" th:value="${urun.id}">
+                                    <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-cart-plus"></i> <span th:text="#{card.add_to_cart}">Sepete Ekle</span></button>
+                                </form>
+                            </div>
+                            <div th:if="${urun.stokAdedi <= 0}">
+                                <button class="btn btn-secondary w-100 mb-2" disabled>
+                                    <i class="bi bi-x-circle"></i> <span th:text="#{card.out_of_stock}">Tükendi</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Düzenleme -->
+                            <div sec:authorize="hasAnyRole('ADMIN', 'SATICI')" class="mb-2">
+                                <a th:href="@{/urun/duzenle/{id}(id=${urun.id})}" class="btn btn-outline-warning w-100 btn-sm">
+                                    <i class="bi bi-pencil"></i> <span th:text="#{product.edit.button}">✏️ Ürünü Düzenle</span>
+                                </a>
+                            </div>
+
+                            <!-- Silme -->
+                            <form th:action="@{/urun/sil/{id}(id=${urun.id})}" method="post" sec:authorize="hasAnyRole('ADMIN', 'SATICI')" th:onsubmit="|return confirm('#{card.confirm_delete}');|">
+                                <button type="submit" class="btn btn-outline-danger w-100 btn-sm"><i class="bi bi-trash"></i> <span th:text="#{card.delete}">Sil</span></button>
+                            </form>
+                        </div>
+                    </div> 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

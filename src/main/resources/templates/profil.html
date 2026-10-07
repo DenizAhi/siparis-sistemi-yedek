@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profilim - Geçmiş Siparişler</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- 1. ADIM (Senin Eklediğin): Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    
+    <!-- Üst Başlık ve Geri Dönüş Butonu -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-person-badge"></i> Merhaba, <span class="text-primary" th:text="${kullanici.kullaniciAdi}">Kullanıcı</span></h2>
+        <a th:href="@{/urunler}" class="btn btn-outline-secondary shadow-sm">
+            <i class="bi bi-arrow-left"></i> Alışverişe Dön
+        </a>
+    </div>
+
+    <!-- Siparişler Kartı -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Geçmiş Siparişlerim</h5>
+        </div>
+        <div class="card-body">
+            
+            <!-- Hiç sipariş yoksa gösterilecek uyarı -->
+            <div th:if="${#lists.isEmpty(siparisler)}" class="alert alert-info text-center m-0">
+                Henüz hiç sipariş vermediniz.
+            </div>
+
+            <!-- Siparişler varsa tabloyu göster -->
+            <table th:unless="${#lists.isEmpty(siparisler)}" class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sipariş No</th>
+                        <th>Tarih</th>
+                        <th>Sipariş Durumu</th>
+                        <th>Toplam Tutar</th>
+                        <th>İşlem</th> 
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="siparis : ${siparisler}">
+                        <td class="fw-bold">#<span th:text="${siparis.id}">1</span></td>
+                        <!-- Tarihi daha okunaklı formatlıyoruz -->
+                        <td th:text="${#temporals.format(siparis.siparisTarihi, 'dd-MM-yyyy HH:mm')}">01-01-2026</td>
+                        <td>
+                            <span class="badge bg-warning text-dark" th:text="${siparis.durum}">BEKLİYOR</span>
+                            
+                            <!-- ========================================================= -->
+                            <!-- 2. ADIM: "KARGOM NEREDE?" BUTONU -->
+                            <!-- ========================================================= -->
+                            <button th:if="${#strings.equalsIgnoreCase(siparis.durum, 'KARGOYA VERİLDİ')}" 
+                                    class="btn btn-sm btn-info text-white shadow-sm mt-2 d-block fw-bold" 
+                                    data-bs-toggle="modal" data-bs-target="#kargoModal" 
+                                    th:onclick="'haritayiBaslat(' + ${siparis.id} + ')'">
+                                <i class="bi bi-geo-alt-fill"></i> Kargom Nerede?
+                            </button>
+                            <!-- ========================================================= -->
+                            
+                        </td>
+                        <td class="text-success fw-bold" th:text="${siparis.toplamTutar} + ' ₺'">0 ₺</td>
+                        <td> 
+                            <!-- Sipariş Detay Butonu (Büyüteç) -->
+                            <a th:href="@{/siparis/detay/{id}(id=${siparis.id})}" class="btn btn-sm btn-outline-primary" title="Sipariş Detayı">
+                                <i class="bi bi-search"></i>
+                            </a>
+                            <form th:if="${siparis.durum == 'BEKLİYOR' or siparis.durum == 'HAZIRLANIYOR'}" 
+                                  th:action="@{/siparis/iptal/{id}(id=${siparis.id})}" 
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Bu siparişi iptal etmek istediğinize emin misiniz?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Siparişi İptal Et">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </form>
+                            
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+        </div>
+    </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- 3. ADIM: KARGO HARİTASI PENCERESİ (MODAL) VE JS KODLARI -->
+<!-- ========================================================= -->
+
+<!-- Modal Penceresi -->
+<div class="modal fade" id="kargoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-info">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-truck"></i> Canlı Kargo Takibi (Ankara)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-1">
+                <!-- Haritanın Çizileceği Kutu -->
+                <div id="kargoHaritasi" style="height: 450px; width: 100%; border-radius: 4px;"></div>
+            </div>
+            <div class="modal-footer bg-light p-2 justify-content-center">
+                <span class="text-muted small"><i class="bi bi-info-circle"></i> Kargonuz tahmini 15 dakika içinde teslim edilecektir.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modalın açılması için zorunlu Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Leaflet Harita Kütüphanesi JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    let map = null;
+    let kargoAraci = null;
+    let animasyonDongusu = null;
+
+    function haritayiBaslat(siparisId) {
+        setTimeout(() => {
+            if (map !== null) {
+                map.remove();
+                clearInterval(animasyonDongusu);
+            }
+
+            // Sabit Merkez Depo: Kızılay
+            const merkezDepo = [39.92077, 32.85411];
+            map = L.map('kargoHaritasi').setView(merkezDepo, 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© NovaMarket Lojistik'
+            }).addTo(map);
+
+            // Sipariş ID'sine göre 4 farklı gerçekçi rota senaryosu
+            // Rotaları olabildiğince ana caddelere (bulvarlara) hizaladık
+            let secilenRota = [];
+            const rotaTipi = siparisId % 4; // Sipariş ID'nin 4'e bölümünden kalana göre yön seçiyoruz
+
+            if (rotaTipi === 0) {
+                // Rota 1: Eskişehir Yolu Üzerinden Söğütözü
+                secilenRota = [ merkezDepo, [39.925, 32.836], [39.914, 32.812], [39.908, 32.805] ];
+            } else if (rotaTipi === 1) {
+                // Rota 2: Kuzeye Doğru Keçiören
+                secilenRota = [ merkezDepo, [39.928, 32.854], [39.953, 32.859], [39.975, 32.865] ];
+            } else if (rotaTipi === 2) {
+                // Rota 3: Dikmen Caddesi Üzerinden Güney
+                secilenRota = [ merkezDepo, [39.911, 32.854], [39.890, 32.845], [39.870, 32.840] ];
+            } else {
+                // Rota 4: İstanbul Yolu Üzerinden Yenimahalle/Batıkent
+                secilenRota = [ merkezDepo, [39.935, 32.840], [39.950, 32.820], [39.965, 32.795] ];
+            }
+
+            // Çizgiyi haritaya ekle
+            L.polyline(secilenRota, {color: '#0dcaf0', weight: 4, dashArray: '8, 8'}).addTo(map);
+
+            // İkonları Yerleştir
+            L.marker(secilenRota[0]).addTo(map).bindPopup("<b>📦 Merkez Depo</b><br>Kızılay").openPopup();
+            
+            // Teslimat adresi için haritayı biraz uzaklaştırıp ortalıyoruz ki tüm rota görünsün
+            const bitisNoktasi = secilenRota[secilenRota.length - 1];
+            L.marker(bitisNoktasi).addTo(map).bindPopup("<b>🏠 Sipariş #" + siparisId + "<br>Teslimat Adresi</b>");
+            
+            // Haritayı tam rotaya göre sığdır
+            const bounds = L.latLngBounds(secilenRota);
+            map.fitBounds(bounds, {padding: [30, 30]});
+
+            const kargoIkonu = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/709/709790.png',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            kargoAraci = L.marker(secilenRota[0], {icon: kargoIkonu}).addTo(map);
+
+            araciSur(secilenRota);
+        }, 300);
+    }
+
+    function araciSur(rota) {
+        let hedefNoktaIndex = 0;
+        let adim = 0;
+        const toplamAdim = 50; // İki nokta arası ne kadar yavaş/akıcı geçilecek
+
+        animasyonDongusu = setInterval(() => {
+            if (hedefNoktaIndex >= rota.length - 1) {
+                clearInterval(animasyonDongusu);
+                kargoAraci.bindPopup("<b class='text-success'>✅ Kargo Teslim Edildi!</b>").openPopup();
+                return;
+            }
+
+            const baslangic = rota[hedefNoktaIndex];
+            const bitis = rota[hedefNoktaIndex + 1];
+
+            // İki nokta arasında aracı yavaşça kaydır (Matematiksel İnterpolasyon)
+            const guncelLat = baslangic[0] + (bitis[0] - baslangic[0]) * (adim / toplamAdim);
+            const guncelLng = baslangic[1] + (bitis[1] - baslangic[1]) * (adim / toplamAdim);
+
+            kargoAraci.setLatLng([guncelLat, guncelLng]);
+            
+            // Harita aracı takip etsin (panTo)
+            map.panTo([guncelLat, guncelLng]);
+
+            adim++;
+            if (adim > toplamAdim) {
+                adim = 0;
+                hedefNoktaIndex++;
+            }
+        }, 80); // Arabanın hızı (80 milisaniyede bir hareket eder)
+    }
+</script>
+
+</body>
+</html>
